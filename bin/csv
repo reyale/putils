@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+import sys
+import csv
+import argparse
+
+def calc_columns(fname):
+    reader = csv.reader(open(fname, 'r'))
+    lengths = []
+
+    for line in reader:
+       if not lengths:
+           lengths = [len(l) for l in line]
+       else:
+           lengths = [max(len(l),o) for l,o in zip(line,lengths)]
+
+    return lengths 
+
+def show(fname, lengths, header, match, invertmatch):
+    reader = csv.reader(open(fname, 'r'))
+    if header: 
+        line = reader.next()
+        print('|'.join([r.ljust(l) for r,l in zip(line, lengths)]))
+        print('|'.join(['-'*l for l in lengths]))
+
+    found_start = invertmatch 
+
+    for line in reader:
+        line = '|'.join([r.ljust(l) for r,l in zip(line, lengths)])
+
+        found = found_start 
+        for m in match: 
+           if line.find(m) != -1:
+               found = not found_start
+               break
+
+        if match and not found: 
+           continue 
+
+        print(line)
+
+if __name__=="__main__":
+    parser = argparse.ArgumentParser(description='view csv file')
+    parser.add_argument('fname', nargs=1)
+    parser.add_argument('--header', action='store_true', default=True)
+    parser.add_argument('-m', '--match', default=[], action='append')
+    parser.add_argument('-v', '--invertmatch', default=False, action='store_true') 
+    args = parser.parse_args()
+
+    fname = args.fname[0]
+    lengths = calc_columns(fname)
+    show(fname, lengths, args.header, args.match, args.invertmatch)
+
+    sys.exit(0) 
